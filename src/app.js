@@ -1,0 +1,60 @@
+import React from 'react'
+import { render } from 'react-dom'
+import TestApp from './components/TestApp'
+
+import ApolloClient, { createNetworkInterface } from 'apollo-client'
+import { ApolloProvider } from 'react-apollo'
+import { createStore, combineReducers, applyMiddleware, compose } from 'redux'
+
+import './style.css'
+
+const networkInterface =
+  createNetworkInterface({
+    uri: 'http://localhost:5000/graphql',
+    credentials: 'same-origin',
+  })
+
+// The x-graphcool-source header is to let the server know that the example app has started.
+// (Not necessary for normal projects)
+networkInterface.use([{
+  applyMiddleware (req, next) {
+    if (!req.options.headers) {
+      // Create the header object if needed.
+      req.options.headers = {}
+    }
+    req.options.headers['x-graphcool-source'] = 'example:react-apollo-todo'
+    next()
+  },
+}])
+
+const client = new ApolloClient({
+  networkInterface,
+})
+
+function filter (previousState = 'SHOW_ALL', action) {
+  if (action.type === 'SET_FILTER') {
+    return action.filter
+  }
+
+  return previousState
+}
+
+const store = createStore(
+  combineReducers({
+    filter,
+    apollo: client.reducer(),
+  }),
+  // initial state
+  {},
+  compose(
+    applyMiddleware(client.middleware()),
+    window.devToolsExtension ? window.devToolsExtension() : f => f
+  )
+)
+
+render(
+  <ApolloProvider store={store} client={client}>
+    <TestApp />
+  </ApolloProvider>,
+  document.getElementById('root')
+)
