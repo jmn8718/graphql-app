@@ -1,5 +1,5 @@
 import React, { Component, PropTypes } from 'react'
-import { fromJS, List } from 'immutable';
+import { fromJS } from 'immutable'
 import gql from 'graphql-tag'
 
 import { connect } from 'react-redux'
